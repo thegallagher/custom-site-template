@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Provision WordPress Stable
+# Provision CakePHP Stable
 
 # fetch the first host as the primary domain. If none is available, generate a default using the site name
 DOMAIN=`get_primary_host "${VVV_SITE_NAME}".test`
@@ -20,36 +20,20 @@ mkdir -p ${VVV_PATH_TO_SITE}/log
 touch ${VVV_PATH_TO_SITE}/log/nginx-error.log
 touch ${VVV_PATH_TO_SITE}/log/nginx-access.log
 
-# Install and configure the latest stable version of WordPress
-if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/wp-load.php" ]]; then
-    echo "Downloading WordPress..."
-	noroot wp core download --version="${WP_VERSION}"
+# Install and configure the latest stable version of CakePHP
+if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/composer.json" ]]; then
+    echo "Downloading CakePHP..."
+    noroot composer create-project --no-scripts --prefer-dist cakephp/app .
 fi
 
-if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/wp-config.php" ]]; then
-  echo "Configuring WordPress Stable..."
-  noroot wp core config --dbname="${DB_NAME}" --dbuser=wp --dbpass=wp --quiet --extra-php <<PHP
-define( 'WP_DEBUG', true );
-define( 'SCRIPT_DEBUG', true );
-PHP
-fi
+noroot composer dump-autoload
 
-if ! $(noroot wp core is-installed); then
-  echo "Installing WordPress Stable..."
-
-  if [ "${WP_TYPE}" = "subdomain" ]; then
-    INSTALL_COMMAND="multisite-install --subdomains"
-  elif [ "${WP_TYPE}" = "subdirectory" ]; then
-    INSTALL_COMMAND="multisite-install"
-  else
-    INSTALL_COMMAND="install"
-  fi
-
-  noroot wp core ${INSTALL_COMMAND} --url="${DOMAIN}" --quiet --title="${SITE_TITLE}" --admin_name=admin --admin_email="admin@local.test" --admin_password="password"
-else
-  echo "Updating WordPress Stable..."
-  cd ${VVV_PATH_TO_SITE}/public_html
-  noroot wp core update --version="${WP_VERSION}"
+if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/config/app.php" ]]; then
+  echo "Configuring CakePHP..."
+  noroot composer run-script post-create-project-cmd
+  sed -i -e "s/'username' => 'my_app',/'username' => 'root',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
+  sed -i -e "s/'password' => 'secret',/'password' => 'root',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
+  sed -i -e "s/'database' => 'my_app',/'database' => '$DB_NAME',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
 fi
 
 cp -f "${VVV_PATH_TO_SITE}/provision/vvv-nginx.conf.tmpl" "${VVV_PATH_TO_SITE}/provision/vvv-nginx.conf"
