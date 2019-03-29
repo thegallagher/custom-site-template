@@ -9,6 +9,12 @@ WP_TYPE=`get_config_value 'wp_type' "single"`
 DB_NAME=`get_config_value 'db_name' "${VVV_SITE_NAME}"`
 DB_NAME=${DB_NAME//[\\\/\.\<\>\:\"\'\|\?\!\*-]/}
 
+# Install required extensions
+apt-get install -y php5.6-xml php7.0-xml php7.1-xml php7.2-xml php7.3-xml
+apt-get install -y php5.6-intl php7.0-intl php7.1-intl php7.2-intl php7.3-intl
+apt-get install -y php5.6-mysql php7.0-mysql php7.1-mysql php7.2-mysql php7.3-mysql
+apt-get install -y php5.6-mbstring php7.0-mbstring php7.1-mbstring php7.2-mbstring php7.3-mbstring
+
 # Make a database, if we don't already have one
 echo -e "\nCreating database '${DB_NAME}' (if it's not already there)"
 mysql -u root --password=root -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME}"
