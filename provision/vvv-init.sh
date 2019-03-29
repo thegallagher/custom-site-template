@@ -23,14 +23,14 @@ touch ${VVV_PATH_TO_SITE}/log/nginx-access.log
 # Install and configure the latest stable version of CakePHP
 if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/composer.json" ]]; then
     echo "Downloading CakePHP..."
-    noroot composer create-project --no-scripts --prefer-dist cakephp/app .
+    noroot composer create-project --no-scripts --prefer-dist cakephp/app "${VVV_PATH_TO_SITE}/public_html"
 fi
 
-noroot composer dump-autoload
+noroot composer dump-autoload --working-dir="${VVV_PATH_TO_SITE}/public_html"
 
 if [[ ! -f "${VVV_PATH_TO_SITE}/public_html/config/app.php" ]]; then
   echo "Configuring CakePHP..."
-  noroot composer run-script post-create-project-cmd
+  noroot composer run-script post-create-project-cmd --working-dir="${VVV_PATH_TO_SITE}/public_html"
   sed -i -e "s/'username' => 'my_app',/'username' => 'root',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
   sed -i -e "s/'password' => 'secret',/'password' => 'root',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
   sed -i -e "s/'database' => 'my_app',/'database' => '$DB_NAME',/g" "${VVV_PATH_TO_SITE}/public_html/config/app.php"
